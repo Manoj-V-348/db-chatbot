@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+/* Root variables */
+:root {
+  color-scheme: dark;
+  --color-background: #05060b;
+  --color-foreground: #f8fafc;
+  --color-accent: #0a84ff;
+}
+
+/* Base styles */
+html {
+  height: 100%;
+  font-family: "Inter", "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  overflow-x: hidden;
+  background-color: var(--color-background);
+  background-image: radial-gradient(100% 100% at 15% 15%, rgba(10, 132, 255, 0.2), transparent 55%),
+    radial-gradient(140% 140% at 85% 10%, rgba(94, 92, 230, 0.28), transparent 60%),
+    radial-gradient(160% 160% at 50% 95%, rgba(52, 199, 89, 0.22), transparent 65%),
+    linear-gradient(120deg, rgba(5, 6, 11, 0.95) 0%, rgba(5, 8, 18, 0.98) 60%, rgba(8, 12, 24, 1) 100%);
+  background-attachment: fixed;
+  color: var(--color-foreground);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Typography */
+h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+h2 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+h6 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+p {
+  line-height: 1.625;
+}
+
+/* Links */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--color-accent);
+}
+
+/* Selection */
+::selection {
+  background: rgba(10, 132, 255, 0.35);
+  color: #f8fafc;
+}
+
+::-moz-selection {
+  background: rgba(10, 132, 255, 0.35);
+  color: #f8fafc;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(11, 13, 23, 0.4);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  border: 2px solid rgba(11, 13, 23, 0.5);
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) rgba(11, 13, 23, 0.4);
+}
+
+/* Focus styles */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(10, 132, 255, 0.4);
+  outline-offset: 2px;
+}
