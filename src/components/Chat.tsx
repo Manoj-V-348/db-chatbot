@@ -8,8 +8,7 @@ import {
   formatMetricLabel,
   isCurrencyMetric,
 } from '../lib/format';
-import { parse } from '../lib/nlp';
-import { execute, describeExecution } from '../lib/executor';
+import { execute } from '../lib/executor';
 import { parseWithAI } from '../lib/ai-parser';
 import { generateNaturalResponse } from '../lib/ai-responder';
 import type { Intent, CampusRecord } from '../lib/types';

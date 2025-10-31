@@ -9,7 +9,8 @@
       "Bash(firebase deploy --only firestore:indexes --project database-chatbot-ccd72)",
       "Bash(firebase login --reauth)",
       "Bash(firebase logout)",
-      "Bash(npm install openai)"
+      "Bash(npm install openai)",
+      "Bash(npm run build)"
     ],
     "deny": [],
     "ask": []

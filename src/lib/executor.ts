@@ -1,4 +1,4 @@
-import type { CampusRecord, CollectionName, Intent, Metric } from './types';
+import type { CampusRecord, Intent, Metric } from './types';
 import {
   fetchCollections,
   readByStatusSorted,
