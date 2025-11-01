@@ -290,6 +290,86 @@
         { "fieldPath": "type", "order": "ASCENDING" },
         { "fieldPath": "rent", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "medals", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "coaches", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "events", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "teams", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "budget", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "education",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "students", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "education",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "teachers", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "education",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "pass_rate", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "education",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "avg_grade", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "education",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "dropout_rate", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

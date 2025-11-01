@@ -10,7 +10,17 @@ export type Metric =
   | 'rent'
   | 'electricity'
   | 'misc'
-  | 'staff';
+  | 'staff'
+  | 'medals'
+  | 'coaches'
+  | 'events'
+  | 'teams'
+  | 'sports_budget'
+  | 'students'
+  | 'teachers'
+  | 'pass_rate'
+  | 'avg_grade'
+  | 'dropout_rate';
 
 export type BreakdownMode = 'none' | 'collection';
 
@@ -24,6 +34,7 @@ export interface Intent {
   status: StatusFilter;
   breakdown: BreakdownMode;
   typeFilter?: string; // e.g., "college", "school", etc.
+  locationFilter?: string; // e.g., "East Maredpally", "Hyderabad"
   sort?: SortOrder; // Sort by metric value
   limit?: number; // Limit number of results
 }
@@ -58,5 +69,41 @@ export interface AggregateResult {
   docsRead: number;
   filteredCount: number;
   statusApplied: StatusFilter;
+}
+
+// New types for sports and education collections
+export type Status = "active" | "inactive";
+export type CampusType = "school" | "college";
+
+export interface SportsRecord {
+  code: number;
+  location: string;
+  name: string;
+  type: CampusType;
+  status: Status;
+  teams?: number;
+  coaches?: number;
+  playgrounds?: number;
+  events?: number;
+  medals?: number;
+  budget?: number;
+  __collection?: "sports";
+}
+
+export interface EducationRecord {
+  code: number;
+  location: string;
+  name: string;
+  type: CampusType;
+  status: Status;
+  students?: number;
+  teachers?: number;
+  pass_rate?: number;
+  avg_grade?: number;
+  dropout_rate?: number;
+  labs?: number;
+  library_books?: number;
+  programs?: number;
+  __collection?: "education";
 }
 

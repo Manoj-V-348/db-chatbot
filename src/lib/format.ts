@@ -8,6 +8,7 @@ const currencyMetrics: Metric[] = [
   'rent',
   'electricity',
   'misc',
+  'sports_budget',
 ];
 
 const METRIC_LABELS: Record<Metric, string> = {
@@ -19,6 +20,16 @@ const METRIC_LABELS: Record<Metric, string> = {
   electricity: 'Electricity',
   misc: 'Miscellaneous',
   staff: 'Staff',
+  medals: 'Medals',
+  coaches: 'Coaches',
+  events: 'Events',
+  teams: 'Teams',
+  sports_budget: 'Sports Budget',
+  students: 'Students',
+  teachers: 'Teachers',
+  pass_rate: 'Pass Rate',
+  avg_grade: 'Average Grade',
+  dropout_rate: 'Dropout Rate',
 };
 
 const COLLECTION_LABELS: Record<CollectionName, string> = {

@@ -4,6 +4,8 @@ import {
   readByStatusSorted,
   readByTypeSorted,
   readByStatusTypeSorted,
+  readSports,
+  readEducation,
 } from './data';
 import { expenditureOf, profitOf } from './format';
 
@@ -12,6 +14,18 @@ export interface ExecutionResult {
   docsRead: number;
   usedIndexes: boolean;
   executionPath: string;
+}
+
+/**
+ * Determines which dataset type to use based on the metric
+ */
+function getDatasetType(metric: Metric): 'finance' | 'sports' | 'education' {
+  const sportsMetrics: Metric[] = ['medals', 'coaches', 'events', 'teams', 'sports_budget'];
+  const educationMetrics: Metric[] = ['students', 'teachers', 'pass_rate', 'avg_grade', 'dropout_rate'];
+
+  if (sportsMetrics.includes(metric)) return 'sports';
+  if (educationMetrics.includes(metric)) return 'education';
+  return 'finance';
 }
 
 /**
@@ -30,6 +44,15 @@ function canUseIndexes(intent: Intent): boolean {
  */
 export async function execute(intent: Intent): Promise<ExecutionResult> {
   const { collections, status, typeFilter, sort, limit, metric } = intent;
+
+  // Route to sports or education executor if metric matches those datasets
+  const datasetType = getDatasetType(metric);
+  if (datasetType === 'sports') {
+    return executeSportsQuery(intent);
+  }
+  if (datasetType === 'education') {
+    return executeEducationQuery(intent);
+  }
 
   // Path 1: Use Firestore indexes for sorting (optimal performance)
   if (canUseIndexes(intent)) {
@@ -113,6 +136,14 @@ export async function execute(intent: Intent): Promise<ExecutionResult> {
     );
   }
 
+  // Apply location filter
+  if (intent.locationFilter) {
+    const locationLower = intent.locationFilter.toLowerCase();
+    records = records.filter((record) =>
+      record.location?.toLowerCase().includes(locationLower)
+    );
+  }
+
   // Apply sorting if requested
   if (sort) {
     records = sortRecordsClientSide(records, metric, sort);
@@ -128,6 +159,125 @@ export async function execute(intent: Intent): Promise<ExecutionResult> {
     docsRead,
     usedIndexes: false,
     executionPath: 'client-side',
+  };
+}
+
+/**
+ * Execute sports queries
+ */
+async function executeSportsQuery(intent: Intent): Promise<ExecutionResult> {
+  const { status, typeFilter, sort, limit, metric, locationFilter } = intent;
+
+  // Map sports_budget to budget field
+  const fieldName = metric === 'sports_budget' ? 'budget' : metric;
+
+  let records = await readSports({
+    status: status === 'any' ? undefined : (status as 'active' | 'inactive'),
+    type: typeFilter as 'school' | 'college' | undefined,
+    orderField: sort ? fieldName : undefined,
+    orderDir: sort,
+    limit,
+  });
+
+  // Apply location filter if specified (client-side since Firestore doesn't support it)
+  if (locationFilter) {
+    const locationLower = locationFilter.toLowerCase();
+    records = records.filter((record) =>
+      record.location?.toLowerCase().includes(locationLower)
+    );
+  }
+
+  // Convert SportsRecord[] to CampusRecord[] for compatibility
+  const campusRecords: any[] = records.map((r) => ({
+    id: String(r.code),
+    __collection: 'sports',
+    __datasetType: 'sports',
+    code: String(r.code),
+    name: r.name,
+    location: r.location,
+    status: r.status === 'active' ? 'active' : r.status === 'inactive' ? 'inactive' : 'unknown',
+    type: r.type,
+    rent: 0,
+    salary: 0,
+    electricity: 0,
+    misc: 0,
+    income: 0,
+    staff: 0,
+    expenditure: 0,
+    profit: 0,
+    // Sports-specific fields
+    teams: r.teams,
+    coaches: r.coaches,
+    playgrounds: r.playgrounds,
+    events: r.events,
+    medals: r.medals,
+    budget: r.budget,
+  }));
+
+  return {
+    records: campusRecords,
+    docsRead: records.length,
+    usedIndexes: sort !== undefined,
+    executionPath: 'sports-collection',
+  };
+}
+
+/**
+ * Execute education queries
+ */
+async function executeEducationQuery(intent: Intent): Promise<ExecutionResult> {
+  const { status, typeFilter, sort, limit, metric, locationFilter } = intent;
+
+  let records = await readEducation({
+    status: status === 'any' ? undefined : (status as 'active' | 'inactive'),
+    type: typeFilter as 'school' | 'college' | undefined,
+    orderField: sort ? metric : undefined,
+    orderDir: sort,
+    limit,
+  });
+
+  // Apply location filter if specified (client-side since Firestore doesn't support it)
+  if (locationFilter) {
+    const locationLower = locationFilter.toLowerCase();
+    records = records.filter((record) =>
+      record.location?.toLowerCase().includes(locationLower)
+    );
+  }
+
+  // Convert EducationRecord[] to CampusRecord[] for compatibility
+  const campusRecords: any[] = records.map((r) => ({
+    id: String(r.code),
+    __collection: 'education',
+    __datasetType: 'education',
+    code: String(r.code),
+    name: r.name,
+    location: r.location,
+    status: r.status === 'active' ? 'active' : r.status === 'inactive' ? 'inactive' : 'unknown',
+    type: r.type,
+    rent: 0,
+    salary: 0,
+    electricity: 0,
+    misc: 0,
+    income: 0,
+    staff: 0,
+    expenditure: 0,
+    profit: 0,
+    // Education-specific fields
+    students: r.students,
+    teachers: r.teachers,
+    pass_rate: r.pass_rate,
+    avg_grade: r.avg_grade,
+    dropout_rate: r.dropout_rate,
+    labs: r.labs,
+    library_books: r.library_books,
+    programs: r.programs,
+  }));
+
+  return {
+    records: campusRecords,
+    docsRead: records.length,
+    usedIndexes: sort !== undefined,
+    executionPath: 'education-collection',
   };
 }
 

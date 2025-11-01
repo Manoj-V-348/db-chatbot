@@ -9,8 +9,9 @@ import {
   isCurrencyMetric,
 } from '../lib/format';
 import { execute } from '../lib/executor';
-import { parseWithAI } from '../lib/ai-parser';
+import { parseWithAI, isCrossCollectionQuery, parseCrossCollectionQuery } from '../lib/ai-parser';
 import { generateNaturalResponse } from '../lib/ai-responder';
+import { executeCrossCollectionQuery, generateCrossCollectionResponse } from '../lib/cross-collection';
 import type { Intent, CampusRecord } from '../lib/types';
 import type { ExecutionResult } from '../lib/executor';
 
@@ -86,7 +87,7 @@ export function Chat() {
       id: createId(),
       role: 'assistant',
       type: 'text',
-      text: 'Hi! I\'m your AI-powered financial assistant. Ask me anything about your campus finances in plain English. For example: "Which is my highest profitable school?" or "Show me top 5 colleges by income" or "What\'s the total expenditure across all institutions?"',
+      text: 'Hi! I\'m your AI-powered campus data assistant. Ask me anything about your campus finances, sports, and education data in plain English.\n\nExamples:\n• "Which is my highest profitable school?"\n• "Show me top 3 schools by number of medals"\n• "What is the pass rate for TS Hyderabad East Maredpally?"\n• "Compare medals and pass rate across all schools"',
     } satisfies AssistantTextMessage,
   ]);
   const [input, setInput] = useState('');
@@ -118,42 +119,61 @@ export function Chat() {
     setIsLoading(true);
 
     try {
-      // Step 1: Parse user query with AI
-      const intent = await parseWithAI(trimmed);
+      // Step 1: Detect if this is a cross-collection query
+      if (isCrossCollectionQuery(trimmed)) {
+        // Handle cross-collection query
+        const crossIntent = await parseCrossCollectionQuery(trimmed);
+        const execution = await executeCrossCollectionQuery(crossIntent);
+        const aiResponse = generateCrossCollectionResponse(trimmed, crossIntent, execution);
 
-      // Step 2: Execute the query
-      const execution = await execute(intent);
-      const summary = aggregateByIntent(execution.records, intent);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: createId(),
+            role: 'assistant',
+            type: 'text',
+            text: aiResponse,
+          } satisfies AssistantTextMessage,
+        ]);
+      } else {
+        // Handle regular single-metric query
+        // Step 2: Parse user query with AI
+        const intent = await parseWithAI(trimmed);
 
-      const hasData = execution.records.length > 0;
+        // Step 3: Execute the query
+        const execution = await execute(intent);
+        const summary = aggregateByIntent(execution.records, intent);
 
-      // Step 3: Generate natural language response
-      let aiResponse: string | undefined;
-      try {
-        aiResponse = await generateNaturalResponse(trimmed, intent, execution);
-      } catch (aiError) {
-        console.error('AI response generation failed:', aiError);
-        // Continue without AI response - will still show data cards
+        const hasData = execution.records.length > 0;
+
+        // Step 4: Generate natural language response
+        let aiResponse: string | undefined;
+        try {
+          aiResponse = await generateNaturalResponse(trimmed, intent, execution);
+        } catch (aiError) {
+          console.error('AI response generation failed:', aiError);
+          // Continue without AI response - will still show data cards
+        }
+
+        // Include detailed records if sorting/limiting was requested
+        const detailedRecords = intent.sort || intent.limit ? execution.records : undefined;
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: createId(),
+            role: 'assistant',
+            type: 'result',
+            intent,
+            timestamp: new Date().toISOString(),
+            hasData,
+            summary,
+            execution,
+            detailedRecords,
+            aiResponse,
+          } satisfies AssistantResultMessage,
+        ]);
       }
-
-      // Include detailed records if sorting/limiting was requested
-      const detailedRecords = intent.sort || intent.limit ? execution.records : undefined;
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: createId(),
-          role: 'assistant',
-          type: 'result',
-          intent,
-          timestamp: new Date().toISOString(),
-          hasData,
-          summary,
-          execution,
-          detailedRecords,
-          aiResponse,
-        } satisfies AssistantResultMessage,
-      ]);
     } catch (error) {
       console.error('Chat intent handling failed', error);
       const errorMessage = error instanceof Error ? error.message : 'Something went wrong while fetching data. Please try again.';
@@ -189,7 +209,7 @@ export function Chat() {
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-white">Ask About Your Data</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Query financial metrics across all institutions using natural language. Try asking about income, expenses, or profit by collection.
+              Query financial, sports, and education metrics across all institutions using natural language. Compare data, filter by location, or analyze specific metrics.
             </p>
           </div>
         </div>

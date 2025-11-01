@@ -7,18 +7,32 @@ import type {
   Intent,
   Metric,
   StatusFilter,
+  SportsRecord,
+  EducationRecord,
+  Status,
+  CampusType,
 } from './types';
 import { toNumber, expenditureOf, profitOf } from './format';
 
-const metricExtractor: Record<Metric, (record: CampusRecord) => number> = {
-  income: (record) => record.income,
-  profit: (record) => record.profit,
-  expenditure: (record) => record.expenditure,
-  salary: (record) => record.salary,
-  rent: (record) => record.rent,
-  electricity: (record) => record.electricity,
-  misc: (record) => record.misc,
-  staff: (record) => record.staff,
+const metricExtractor: Record<Metric, (record: any) => number> = {
+  income: (record) => record.income ?? 0,
+  profit: (record) => record.profit ?? 0,
+  expenditure: (record) => record.expenditure ?? 0,
+  salary: (record) => record.salary ?? 0,
+  rent: (record) => record.rent ?? 0,
+  electricity: (record) => record.electricity ?? 0,
+  misc: (record) => record.misc ?? 0,
+  staff: (record) => record.staff ?? 0,
+  medals: (record) => record.medals ?? 0,
+  coaches: (record) => record.coaches ?? 0,
+  events: (record) => record.events ?? 0,
+  teams: (record) => record.teams ?? 0,
+  sports_budget: (record) => record.budget ?? 0,
+  students: (record) => record.students ?? 0,
+  teachers: (record) => record.teachers ?? 0,
+  pass_rate: (record) => record.pass_rate ?? 0,
+  avg_grade: (record) => record.avg_grade ?? 0,
+  dropout_rate: (record) => record.dropout_rate ?? 0,
 };
 
 function normalizeStatus(value: unknown): 'active' | 'inactive' | 'unknown' {
@@ -189,4 +203,80 @@ export async function readByStatusTypeSorted(
 
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => mapDocument(doc.data(), doc.id, collectionName));
+}
+
+/**
+ * Fetch sports records from Firestore with optional filters and sorting
+ */
+export async function readSports(opts?: {
+  status?: Status;
+  type?: CampusType;
+  orderField?: string;
+  orderDir?: "asc" | "desc";
+  limit?: number;
+}): Promise<SportsRecord[]> {
+  const col = collection(db, "sports");
+  const terms: any[] = [];
+
+  if (opts?.status) terms.push(where("status", "==", opts.status));
+  if (opts?.type) terms.push(where("type", "==", opts.type));
+  if (opts?.orderField) terms.push(orderBy(opts.orderField, opts.orderDir ?? "desc"));
+  if (opts?.limit) terms.push(firestoreLimit(opts.limit));
+
+  const qref = terms.length ? query(col, ...terms) : col;
+  const snap = await getDocs(qref);
+
+  return snap.docs.map(d => ({
+    __collection: "sports" as const,
+    code: toNumber(d.data().code),
+    location: String(d.data().location ?? ""),
+    name: String(d.data().name ?? ""),
+    type: (d.data().type ?? "school") as CampusType,
+    status: (d.data().status ?? "active") as Status,
+    teams: d.data().teams !== undefined ? toNumber(d.data().teams) : undefined,
+    coaches: d.data().coaches !== undefined ? toNumber(d.data().coaches) : undefined,
+    playgrounds: d.data().playgrounds !== undefined ? toNumber(d.data().playgrounds) : undefined,
+    events: d.data().events !== undefined ? toNumber(d.data().events) : undefined,
+    medals: d.data().medals !== undefined ? toNumber(d.data().medals) : undefined,
+    budget: d.data().budget !== undefined ? toNumber(d.data().budget) : undefined,
+  }));
+}
+
+/**
+ * Fetch education records from Firestore with optional filters and sorting
+ */
+export async function readEducation(opts?: {
+  status?: Status;
+  type?: CampusType;
+  orderField?: string;
+  orderDir?: "asc" | "desc";
+  limit?: number;
+}): Promise<EducationRecord[]> {
+  const col = collection(db, "education");
+  const terms: any[] = [];
+
+  if (opts?.status) terms.push(where("status", "==", opts.status));
+  if (opts?.type) terms.push(where("type", "==", opts.type));
+  if (opts?.orderField) terms.push(orderBy(opts.orderField, opts.orderDir ?? "desc"));
+  if (opts?.limit) terms.push(firestoreLimit(opts.limit));
+
+  const qref = terms.length ? query(col, ...terms) : col;
+  const snap = await getDocs(qref);
+
+  return snap.docs.map(d => ({
+    __collection: "education" as const,
+    code: toNumber(d.data().code),
+    location: String(d.data().location ?? ""),
+    name: String(d.data().name ?? ""),
+    type: (d.data().type ?? "school") as CampusType,
+    status: (d.data().status ?? "active") as Status,
+    students: d.data().students !== undefined ? toNumber(d.data().students) : undefined,
+    teachers: d.data().teachers !== undefined ? toNumber(d.data().teachers) : undefined,
+    pass_rate: d.data().pass_rate !== undefined ? toNumber(d.data().pass_rate) : undefined,
+    avg_grade: d.data().avg_grade !== undefined ? toNumber(d.data().avg_grade) : undefined,
+    dropout_rate: d.data().dropout_rate !== undefined ? toNumber(d.data().dropout_rate) : undefined,
+    labs: d.data().labs !== undefined ? toNumber(d.data().labs) : undefined,
+    library_books: d.data().library_books !== undefined ? toNumber(d.data().library_books) : undefined,
+    programs: d.data().programs !== undefined ? toNumber(d.data().programs) : undefined,
+  }));
 }

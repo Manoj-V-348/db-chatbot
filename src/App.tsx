@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import Chat from './components/Chat';
 import DataTable from './components/DataTable';
+import SportsTable from './components/SportsTable';
+import EducationTable from './components/EducationTable';
+import MergedLocationTable from './components/MergedLocationTable';
 
-type TabId = 'chat' | 'data';
+type TabId = 'chat' | 'data' | 'sports' | 'education' | 'merged';
 
 const TABS: Array<{ id: TabId; label: string; description: string; icon: string }> = [
   {
@@ -13,9 +16,27 @@ const TABS: Array<{ id: TabId; label: string; description: string; icon: string 
   },
   {
     id: 'data',
-    label: 'Data',
+    label: 'Finance',
     description: 'Explore, filter, and export financial data',
-    icon: '📊',
+    icon: '💰',
+  },
+  {
+    id: 'sports',
+    label: 'Sports',
+    description: 'View sports metrics and achievements',
+    icon: '🏆',
+  },
+  {
+    id: 'education',
+    label: 'Education',
+    description: 'Track academic performance and metrics',
+    icon: '📚',
+  },
+  {
+    id: 'merged',
+    label: 'Merged by Location',
+    description: 'Unified view across all data sources',
+    icon: '🗺️',
   },
 ];
 
@@ -24,9 +45,9 @@ function resolveHash(): TabId {
     return 'chat';
   }
 
-  const hashValue = window.location.hash.replace('#', '').replace('/', '');
-  if (hashValue === 'data') {
-    return 'data';
+  const hashValue = window.location.hash.replace('#', '').replace('/', '') as TabId;
+  if (['chat', 'data', 'sports', 'education', 'merged'].includes(hashValue)) {
+    return hashValue;
   }
   return 'chat';
 }
@@ -158,7 +179,11 @@ export function App() {
           className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pb-12 pt-8 text-slate-100 sm:px-6 lg:px-8"
         >
           <div className="animate-fade-in">
-            {currentTab.id === 'chat' ? <Chat /> : <DataTable />}
+            {currentTab.id === 'chat' && <Chat />}
+            {currentTab.id === 'data' && <DataTable />}
+            {currentTab.id === 'sports' && <SportsTable />}
+            {currentTab.id === 'education' && <EducationTable />}
+            {currentTab.id === 'merged' && <MergedLocationTable />}
           </div>
         </main>
 

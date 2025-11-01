@@ -1,7 +1,19 @@
 import { openai, AI_MODEL } from './openai';
-import type { Intent, CampusRecord } from './types';
+import type { Intent, CampusRecord, Metric } from './types';
 import type { ExecutionResult } from './executor';
 import { formatINR, formatMetricLabel, formatCollectionName, isCurrencyMetric } from './format';
+
+/**
+ * Detect which dataset type we're querying
+ */
+function getDatasetType(metric: Metric): 'finance' | 'sports' | 'education' {
+  const sportsMetrics: Metric[] = ['medals', 'coaches', 'events', 'teams', 'sports_budget'];
+  const educationMetrics: Metric[] = ['students', 'teachers', 'pass_rate', 'avg_grade', 'dropout_rate'];
+
+  if (sportsMetrics.includes(metric)) return 'sports';
+  if (educationMetrics.includes(metric)) return 'education';
+  return 'finance';
+}
 
 /**
  * Generate a natural language response based on query results
@@ -14,31 +26,10 @@ export async function generateNaturalResponse(
   // Prepare data summary for the AI
   const dataSummary = prepareDataSummary(intent, execution);
 
-  const systemPrompt = `You are a helpful financial assistant for a Campus Finance management system.
+  // Detect dataset type for context-aware prompts
+  const datasetType = getDatasetType(intent.metric);
 
-Your task is to provide clear, concise, natural language responses to user questions about financial data.
-
-GUIDELINES:
-1. Use Indian Rupee format (₹) for currency values
-2. Be conversational and friendly but professional
-3. Directly answer the question in 1-2 sentences
-4. Mention the institution name if available, otherwise use the code
-5. For "highest/top" queries, mention the winner clearly
-6. For lists, mention how many results were found
-7. For breakdowns, summarize the distribution
-8. Always include the actual numeric value
-
-RESPONSE STYLE:
-- "School A is your most profitable school with a profit of ₹5,10,56,000."
-- "The top 5 colleges by income are: [list them with values]"
-- "Your total expenditure across all institutions is ₹12,50,000."
-- "The college with the lowest rent is College B, paying ₹45,000 per month."
-
-IMPORTANT:
-- Do NOT explain what you did or how you calculated
-- Do NOT say "Based on the data..." or "According to the database..."
-- Just give the direct answer
-- Keep it under 100 words`;
+  const systemPrompt = getSystemPrompt(datasetType);
 
   try {
     const completion = await openai.chat.completions.create({
@@ -91,9 +82,12 @@ function prepareDataSummary(intent: Intent, execution: ExecutionResult): string 
     const value = getMetricValue(record, intent.metric);
     const formattedValue = formatValue(intent.metric, value);
     const name = record.name || record.code;
-    const collection = formatCollectionName(record.__collection);
+    const collection = (record as any).__collection || 'unknown';
+    const collectionLabel = collection === 'sports' ? 'Sports Collection' :
+                           collection === 'education' ? 'Education Collection' :
+                           formatCollectionName(record.__collection);
 
-    summary = `Result: ${name} (${collection}) has ${metricLabel} of ${formattedValue}.`;
+    summary = `Result: ${name} (from ${collectionLabel}) has ${metricLabel} of ${formattedValue}.`;
   }
   // Multiple results with sorting/limiting
   else if (intent.sort && records.length > 0) {
@@ -102,8 +96,11 @@ function prepareDataSummary(intent: Intent, execution: ExecutionResult): string 
       const value = getMetricValue(record, intent.metric);
       const formattedValue = formatValue(intent.metric, value);
       const name = record.name || record.code;
-      const collection = formatCollectionName(record.__collection);
-      summary += `${index + 1}. ${name} (${collection}): ${formattedValue}\n`;
+      const collection = (record as any).__collection || 'unknown';
+      const collectionLabel = collection === 'sports' ? 'Sports' :
+                             collection === 'education' ? 'Education' :
+                             formatCollectionName(record.__collection);
+      summary += `${index + 1}. ${name} (${collectionLabel}): ${formattedValue}\n`;
     });
   }
   // Breakdown by collection
@@ -172,10 +169,71 @@ function generateFallbackResponse(intent: Intent, execution: ExecutionResult): s
 }
 
 /**
+ * Get context-aware system prompt based on dataset type
+ */
+function getSystemPrompt(datasetType: 'finance' | 'sports' | 'education'): string {
+  const baseGuidelines = `
+GUIDELINES:
+1. Use Indian Rupee format (₹) for currency values
+2. Be conversational and friendly but professional
+3. Directly answer the question in 1-2 sentences
+4. Mention the institution name if available, otherwise use the code
+5. For "highest/top" queries, mention the winner clearly
+6. For lists, mention how many results were found
+7. For breakdowns, summarize the distribution
+8. Always include the actual numeric value
+
+IMPORTANT:
+- Do NOT explain what you did or how you calculated
+- Do NOT say "Based on the data..." or "According to the database..."
+- Just give the direct answer
+- Keep it under 100 words`;
+
+  if (datasetType === 'sports') {
+    return `You are a helpful assistant for a Campus Sports management system.
+
+Your task is to provide clear, concise, natural language responses to user questions about sports data (medals, coaches, events, teams, sports budget).
+
+RESPONSE STYLE:
+- "School A has won the most medals with 45 medals."
+- "The top 3 schools by number of coaches are: [list them with values]"
+- "Your total sports budget across all institutions is ₹50,00,000."
+- "College B has the highest number of teams with 12 teams."
+${baseGuidelines}`;
+  }
+
+  if (datasetType === 'education') {
+    return `You are a helpful assistant for a Campus Education management system.
+
+Your task is to provide clear, concise, natural language responses to user questions about education data (students, teachers, pass rates, grades, dropout rates).
+
+RESPONSE STYLE:
+- "School A has the most students with 1,250 students enrolled."
+- "The pass rate at College B is 92%."
+- "The top 3 schools by number of teachers are: [list them with values]"
+- "The average grade across all institutions is 7.8 out of 10."
+${baseGuidelines}`;
+  }
+
+  // Finance
+  return `You are a helpful assistant for a Campus Finance management system.
+
+Your task is to provide clear, concise, natural language responses to user questions about financial data.
+
+RESPONSE STYLE:
+- "School A is your most profitable school with a profit of ₹5,10,56,000."
+- "The top 5 colleges by income are: [list them with values]"
+- "Your total expenditure across all institutions is ₹12,50,000."
+- "The college with the lowest rent is College B, paying ₹45,000 per month."
+${baseGuidelines}`;
+}
+
+/**
  * Get the metric value from a record
  */
 function getMetricValue(record: CampusRecord, metric: Intent['metric']): number {
   switch (metric) {
+    // Finance metrics
     case 'profit':
       return record.profit;
     case 'expenditure':
@@ -192,6 +250,28 @@ function getMetricValue(record: CampusRecord, metric: Intent['metric']): number 
       return record.misc;
     case 'staff':
       return record.staff;
+    // Sports metrics
+    case 'medals':
+      return (record as any).medals ?? 0;
+    case 'coaches':
+      return (record as any).coaches ?? 0;
+    case 'events':
+      return (record as any).events ?? 0;
+    case 'teams':
+      return (record as any).teams ?? 0;
+    case 'sports_budget':
+      return (record as any).budget ?? 0;
+    // Education metrics
+    case 'students':
+      return (record as any).students ?? 0;
+    case 'teachers':
+      return (record as any).teachers ?? 0;
+    case 'pass_rate':
+      return (record as any).pass_rate ?? 0;
+    case 'avg_grade':
+      return (record as any).avg_grade ?? 0;
+    case 'dropout_rate':
+      return (record as any).dropout_rate ?? 0;
     default:
       return 0;
   }
@@ -204,5 +284,16 @@ function formatValue(metric: Intent['metric'], value: number): string {
   if (isCurrencyMetric(metric)) {
     return formatINR(value);
   }
+
+  // Format percentage metrics (pass_rate, dropout_rate are stored as 0-1)
+  if (metric === 'pass_rate' || metric === 'dropout_rate') {
+    return `${(value * 100).toFixed(1)}%`;
+  }
+
+  // Format avg_grade with one decimal place
+  if (metric === 'avg_grade') {
+    return value.toFixed(1);
+  }
+
   return new Intl.NumberFormat('en-IN').format(value);
 }

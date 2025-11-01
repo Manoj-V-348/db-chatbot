@@ -10,7 +10,10 @@
       "Bash(firebase login --reauth)",
       "Bash(firebase logout)",
       "Bash(npm install openai)",
-      "Bash(npm run build)"
+      "Bash(npm run build)",
+      "Bash(git push origin main)",
+      "Bash(git commit --allow-empty -m \"Trigger Cloudflare rebuild with fixes\")",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

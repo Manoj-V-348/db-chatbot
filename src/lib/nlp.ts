@@ -2,6 +2,7 @@ import { COLLECTIONS } from './types';
 import type { CollectionName, Intent, Metric, StatusFilter, SortOrder } from './types';
 
 const metricMatchers: Array<{ metric: Metric; patterns: RegExp[] }> = [
+  // Finance metrics
   {
     metric: 'profit',
     patterns: [/\boverall surplus\b/, /\bsurplus\b/, /\bprofit\b/],
@@ -33,6 +34,48 @@ const metricMatchers: Array<{ metric: Metric; patterns: RegExp[] }> = [
   {
     metric: 'income',
     patterns: [/\bincome\b/, /\brevenue\b/],
+  },
+  // Sports metrics
+  {
+    metric: 'medals',
+    patterns: [/\bmedals?\b/, /\bawards?\b/, /\btrophies\b/],
+  },
+  {
+    metric: 'coaches',
+    patterns: [/\bcoach(es)?\b/, /\btrainers?\b/],
+  },
+  {
+    metric: 'events',
+    patterns: [/\bevents?\b/, /\bcompetitions?\b/, /\btournaments?\b/],
+  },
+  {
+    metric: 'teams',
+    patterns: [/\bteams?\b/, /\bsquads?\b/],
+  },
+  {
+    metric: 'sports_budget',
+    patterns: [/\bsports budget\b/, /\bsports funding\b/, /\bathletics budget\b/],
+  },
+  // Education metrics
+  {
+    metric: 'students',
+    patterns: [/\bstudents?\b/, /\benrollment\b/, /\benrolled\b/],
+  },
+  {
+    metric: 'teachers',
+    patterns: [/\bteachers?\b/, /\bfaculty\b/, /\binstructors?\b/],
+  },
+  {
+    metric: 'pass_rate',
+    patterns: [/\bpass rate\b/, /\bpassing rate\b/, /\bsuccess rate\b/],
+  },
+  {
+    metric: 'avg_grade',
+    patterns: [/\baverage grade\b/, /\bavg grade\b/, /\bmean grade\b/, /\bGPA\b/],
+  },
+  {
+    metric: 'dropout_rate',
+    patterns: [/\bdropout rate\b/, /\battrition rate\b/, /\bdropouts?\b/],
   },
 ];
 
@@ -154,6 +197,26 @@ function detectLimit(normalized: string): number | undefined {
   return undefined;
 }
 
+function detectLocationFilter(input: string): string | undefined {
+  // Match patterns like "for <location>", "in <location>", "at <location>"
+  const forMatch = input.match(/\bfor\s+([A-Z][A-Za-z\s]+?)(?:\s+(?:with|by|and|,|$))/);
+  if (forMatch) {
+    return forMatch[1].trim();
+  }
+
+  const inMatch = input.match(/\bin\s+([A-Z][A-Za-z\s]+?)(?:\s+(?:with|by|and|,|$))/);
+  if (inMatch) {
+    return inMatch[1].trim();
+  }
+
+  const atMatch = input.match(/\bat\s+([A-Z][A-Za-z\s]+?)(?:\s+(?:with|by|and|,|$))/);
+  if (atMatch) {
+    return atMatch[1].trim();
+  }
+
+  return undefined;
+}
+
 export function parse(input: string): Intent {
   const normalized = input.toLowerCase();
   const metric = detectMetric(normalized);
@@ -163,6 +226,7 @@ export function parse(input: string): Intent {
   const typeFilter = detectTypeFilter(normalized);
   const sort = detectSort(normalized);
   const limit = detectLimit(normalized);
+  const locationFilter = detectLocationFilter(input); // Use original input for capitalization
 
   return {
     metric,
@@ -170,6 +234,7 @@ export function parse(input: string): Intent {
     status,
     breakdown,
     typeFilter,
+    locationFilter,
     sort,
     limit,
   };
