@@ -2,10 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { aggregateByIntent } from '../lib/data';
 import {
-  formatCollectionList,
   formatCollectionName,
   formatINR,
-  formatMetricLabel,
   isCurrencyMetric,
 } from '../lib/format';
 import { execute } from '../lib/executor';
@@ -71,14 +69,6 @@ function formatValue(metric: Intent['metric'], value: number): string {
   }
 
   return new Intl.NumberFormat('en-IN').format(value);
-}
-
-function formatTimestamp(timestamp: string) {
-  return new Date(timestamp).toLocaleString('en-IN', {
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: true,
-  });
 }
 
 export function Chat() {
@@ -274,9 +264,7 @@ export function Chat() {
               );
             }
 
-            const { intent, summary, hasData, timestamp, execution, detailedRecords, aiResponse } = message;
-            const metricLabel = formatMetricLabel(intent.metric);
-            const headline = `${metricLabel} — ${formatCollectionList(intent.collections)}`;
+            const { intent, summary, hasData, execution, detailedRecords, aiResponse } = message;
 
             return (
               <article
@@ -310,14 +298,6 @@ export function Chat() {
                       !hasData ? 'border-dashed border-warning/30' : 'border-white/10'
                     }`}
                   >
-                  {/* Card header */}
-                  <div className="border-b border-white/10 bg-white/5 px-6 py-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <h3 className="text-sm font-semibold text-white">{headline}</h3>
-                      <time className="text-xs text-slate-400">{formatTimestamp(timestamp)}</time>
-                    </div>
-                  </div>
-
                   {/* Card body */}
                   <div className="p-6">
                     <div className="space-y-6">
