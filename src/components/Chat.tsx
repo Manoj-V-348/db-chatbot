@@ -77,7 +77,7 @@ export function Chat() {
       id: createId(),
       role: 'assistant',
       type: 'text',
-      text: 'Hi! I\'m your AI-powered campus data assistant. Ask me anything about your campus finances, sports, and education data in plain English.\n\nExamples:\n• "Which is my highest profitable school?"\n• "Show me top 3 schools by number of medals"\n• "What is the pass rate for TS Hyderabad East Maredpally?"\n• "Compare medals and pass rate across all schools"',
+      text: 'Hi! I\'m Varsity Chat, your AI-powered institutional data assistant. Ask me anything about your finances, sports, and education data in plain English.\n\nExamples:\n• "Which is my highest profitable school?"\n• "Show me top 3 schools by number of medals"\n• "What is the pass rate for TS Hyderabad East Maredpally?"\n• "Compare medals and pass rate across all schools"',
     } satisfies AssistantTextMessage,
   ]);
   const [input, setInput] = useState('');
@@ -397,6 +397,77 @@ export function Chat() {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Query Details Section */}
+                  <div className="border-t border-white/5 bg-white/[0.02] px-6 py-4">
+                    <details className="group">
+                      <summary className="flex cursor-pointer items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-300">
+                        <svg className="h-4 w-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                        Database Query
+                      </summary>
+                      <div className="mt-3 space-y-3 text-xs">
+                        <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                          <div className="mb-2 flex items-center gap-2 font-semibold text-accent-light">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                            </svg>
+                            Firestore Query
+                          </div>
+                          <div className="space-y-1 font-mono text-[11px] leading-relaxed text-slate-300">
+                            <div className="text-blue-400">db.collection(<span className="text-orange-400">"{intent.collections[0]}"</span>)</div>
+                            {intent.status !== 'any' && (
+                              <div className="pl-4 text-purple-400">.where(<span className="text-orange-400">"status"</span>, <span className="text-orange-400">"=="</span>, <span className="text-orange-400">"{intent.status}"</span>)</div>
+                            )}
+                            {intent.typeFilter && (
+                              <div className="pl-4 text-purple-400">.where(<span className="text-orange-400">"type"</span>, <span className="text-orange-400">"=="</span>, <span className="text-orange-400">"{intent.typeFilter}"</span>)</div>
+                            )}
+                            {intent.locationFilter && (
+                              <div className="pl-4 text-purple-400">.where(<span className="text-orange-400">"location"</span>, <span className="text-orange-400">"contains"</span>, <span className="text-orange-400">"{intent.locationFilter}"</span>)</div>
+                            )}
+                            {intent.sort && execution.usedIndexes && (
+                              <div className="pl-4 text-green-400">.orderBy(<span className="text-orange-400">"{intent.metric}"</span>, <span className="text-orange-400">"{intent.sort}"</span>)</div>
+                            )}
+                            {intent.limit && (
+                              <div className="pl-4 text-yellow-400">.limit(<span className="text-orange-400">{intent.limit}</span>)</div>
+                            )}
+                            <div className="pl-4 text-slate-400">.get()</div>
+                            {intent.collections.length > 1 && (
+                              <div className="mt-2 text-slate-500">// + {intent.collections.length - 1} more collection(s): {intent.collections.slice(1).join(', ')}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                          <div className="mb-2 flex items-center gap-2 font-semibold text-accent-light">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                            </svg>
+                            Execution Path
+                          </div>
+                          <div className="font-mono text-[11px] text-slate-300">
+                            <span className="text-cyan-400">{execution.executionPath}</span>
+                          </div>
+                          {execution.usedIndexes && (
+                            <div className="mt-2 flex items-center gap-1.5 text-success-light">
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Using composite index: (status, {intent.metric})
+                            </div>
+                          )}
+                          {!execution.usedIndexes && (
+                            <div className="mt-2 flex items-center gap-1.5 text-yellow-400">
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                              </svg>
+                              Client-side processing (computed metric)
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </details>
                   </div>
 
                   {/* Card footer with metadata */}

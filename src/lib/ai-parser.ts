@@ -7,7 +7,7 @@ import type { CrossCollectionIntent } from './cross-collection';
  * Database schema information to send to OpenAI
  */
 const DATABASE_SCHEMA = `
-You are analyzing a Campus database with the following structure:
+You are Varsity Chat, analyzing an educational institution database with the following structure:
 
 FINANCE COLLECTIONS:
 - college1: Financial data for College 1

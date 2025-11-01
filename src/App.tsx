@@ -107,10 +107,10 @@ export function App() {
                 {/* Title and subtitle */}
                 <div>
                   <h1 className="text-lg font-bold tracking-tight text-white sm:text-xl">
-                    Campus Finance
+                    Varsity Chat
                   </h1>
                   <p className="text-xs text-slate-400 sm:text-sm">
-                    Multi-institution financial analytics platform
+                    AI-powered institutional data analytics
                   </p>
                 </div>
               </div>
@@ -194,10 +194,10 @@ export function App() {
               {/* Footer content */}
               <div className="text-center sm:text-left">
                 <p className="text-sm font-medium text-slate-300">
-                  Campus Finance Platform
+                  Varsity Chat
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Providing financial insights for College 1, School 1, and School 2
+                  AI-powered analytics for educational institutions
                 </p>
               </div>
 
